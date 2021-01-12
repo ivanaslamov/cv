@@ -211,19 +211,3 @@ def preview_gaussian_derivative_phi():
             break
 
         angle += 1
-
-
-# def getErrorEllipse(chisquare_val, mean, covmat):
-#     cv::eigen(covmat, true, eigenvalues, eigenvectors);
-#
-#     angle = atan2(eigenvectors.at < double > (0, 1), eigenvectors.at < double > (0, 0));
-#
-#     if (angle < 0)
-#     angle += 6.28318530718;
-#
-#     angle = 180 * angle / 3.14159265359;
-#
-#     halfmajoraxissize = chisquare_val * sqrt(eigenvalues.at < double > (0));
-#     halfminoraxissize = chisquare_val * sqrt(eigenvalues.at < double > (1));
-#
-#     return cv::RotatedRect(mean, cv::Size2f(halfmajoraxissize, halfminoraxissize), -angle);

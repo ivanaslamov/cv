@@ -117,7 +117,7 @@ def gradient(img):
     if img.dtype != 'float32':
         img = img.astype('float32')
 
-    kernel_size = 8
+    kernel_size = 9
     kernel_x = gaussian_derivative_x(kernel_size)
     kernel_y = gaussian_derivative_y(kernel_size)
     dx = cv2.filter2D(img, -1, kernel_x)

@@ -28,7 +28,7 @@ def canny(image, threshold_one, threshold_two):
 
     edges = np.zeros((height, width), np.float32)
 
-    # non maxima supression
+    # non maxima suppression
 
     for y in range(1, height-1):
         for x in range(1, width-1):
@@ -53,6 +53,7 @@ def canny(image, threshold_one, threshold_two):
                 edges[(y, x)] = magnitude
 
     # histerisis thresholding
+
     pixels = []
 
     for y in range(0, height):

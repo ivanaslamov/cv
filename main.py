@@ -65,10 +65,21 @@ res = minimize(obj_func, start_point)
 
 print(res)
 
-a, b, c = res.x
-gray = cv2.ellipse(gray, (int(a), int(b)), (int(c), int(c)), 5, 0, 360, 255, 1)
 
-cv2.imshow('frame', gray)
+a, b, c = res.x
+
+kernel = np.zeros((height, width), np.float32)
+
+maximum = 0
+
+for y in range(0, height):
+    for x in range(0, width):
+        value = (x - a)**2 + (y - b)**2 - c**2
+        if (value > maximum):
+            maximum = value
+        kernel[(y, x)] = value # np.abs(value)
+
+cv2.imshow('frame', kernel)
 cv2.waitKey(10000)
 
 cv2.destroyAllWindows()

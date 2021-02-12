@@ -41,21 +41,21 @@ while(True):
     frame = gray.copy()
 
     if radius:
-        frame = cv2.ellipse(frame, (point0_x, point0_y), (int(radius), int(radius)), 5, 0, 360, 255, -1)
+        frame = cv2.ellipse(frame, (point0_x, point0_y), (int(radius), int(radius)), 5, 0, 360, 255, 1)
 
     cv2.imshow('frame', frame)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         break
 
 
-start_point = np.array([point0_x, point0_y])
+start_point = np.array([point0_x, point0_y, radius])
 
 
 def obj_func(p):
     acc = 0
 
     for x, y in points:
-        acc += (x - p[0])**2 + (y - p[1])**2/radius**2 - radius**2
+        acc += ( (x - p[0])**2 + (y - p[1])**2 - p[2]**2 )**2
 
     return acc
 
@@ -65,8 +65,8 @@ res = minimize(obj_func, start_point)
 
 print(res)
 
-a, b = res.x
-gray = cv2.ellipse(gray, (int(a), int(b)), (int(radius), int(radius)), 5, 0, 360, 255, -1)
+a, b, c = res.x
+gray = cv2.ellipse(gray, (int(a), int(b)), (int(c), int(c)), 5, 0, 360, 255, 1)
 
 cv2.imshow('frame', gray)
 cv2.waitKey(10000)

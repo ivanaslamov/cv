@@ -48,14 +48,25 @@ while(True):
         break
 
 
-start_point = np.array([point0_x, point0_y, radius])
+a = 1
+b = 0
+c = 1
+d = - 2*point0_x
+e = - 2*point0_y
+f = point0_y**2 + point0_x**2 - radius**2
+
+start_point = np.array([a, b, c, d, e, f])
+
+
+def equation(p, x, y):
+    return p[0] * x**2 + p[1] * x * y + p[2] * y**2 + p[3] * x + p[4] * y + p[5]
 
 
 def obj_func(p):
     acc = 0
 
     for x, y in points:
-        acc += ( (x - p[0])**2 + (y - p[1])**2 - p[2]**2 )**2
+        acc += (equation(p, x, y))**2
 
     return acc
 
@@ -66,15 +77,13 @@ res = minimize(obj_func, start_point)
 print(res)
 
 
-a, b, c = res.x
-
 kernel = np.zeros((height, width), np.float32)
 
 maximum = 0
 
 for y in range(0, height):
     for x in range(0, width):
-        value = (x - a)**2 + (y - b)**2 - c**2
+        value = equation(res.x, x, y)
         if (value > maximum):
             maximum = value
         kernel[(y, x)] = value # np.abs(value)

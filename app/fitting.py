@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from scipy.optimize import minimize, line_search
+from scipy.optimize import minimize
 
 
 def ellipse(image, x0 = 0, y0 = 0, r = 100):

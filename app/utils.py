@@ -3,7 +3,7 @@ import numpy as np
 
 
 def gaussian(n):
-    s = 0.3 * ( n / 2 - 1 ) + 0.8
+    s = 0.3 * (n / 2 - 1) + 0.8
 
     mat = np.zeros((n, n), np.float32)
 
@@ -36,7 +36,8 @@ def gaussian_derivative_xx(n):
     for x in range(0, n):
         for y in range(0, n):
             sq_dist = np.power(x - n / 2.0, 2) + np.power(y - n / 2.0, 2)
-            mat[(y, x)] = (1 - np.power(x - n / 2.0, 2) / np.power(s, 2)) / (2 * np.pi * np.power(s, 4)) * np.exp(- sq_dist / (2.0 * np.power(s, 2)))
+            mat[(y, x)] = (1 - np.power(x - n / 2.0, 2) / np.power(s, 2)) / (2 * np.pi * np.power(s, 4)) * np.exp(
+                - sq_dist / (2.0 * np.power(s, 2)))
 
     return mat[1:, 1:]
 
@@ -62,7 +63,8 @@ def gaussian_derivative_yy(n):
     for x in range(0, n):
         for y in range(0, n):
             sq_dist = np.power(x - n / 2.0, 2) + np.power(y - n / 2.0, 2)
-            mat[(y, x)] = (1 - np.power(y - n / 2.0, 2) / np.power(s, 2)) / (2 * np.pi * np.power(s, 4)) * np.exp(- sq_dist / (2.0 * np.power(s, 2)))
+            mat[(y, x)] = (1 - np.power(y - n / 2.0, 2) / np.power(s, 2)) / (2 * np.pi * np.power(s, 4)) * np.exp(
+                - sq_dist / (2.0 * np.power(s, 2)))
 
     return mat[1:, 1:]
 
@@ -90,7 +92,7 @@ def gaussian_derivative_phi(phi, n):
     mx = np.sin(theta * np.pi / 180) * np.cos(phi * np.pi / 180)
     my = np.sin(theta * np.pi / 180) * np.sin(phi * np.pi / 180)
 
-    magnitude = np.sqrt(mx*mx + my*my)
+    magnitude = np.sqrt(mx * mx + my * my)
     ux = mx / magnitude;
     uy = my / magnitude;
 
@@ -108,7 +110,7 @@ def gaussian_derivative_phi(phi, n):
     return mat[1:, 1:]
 
 
-def gradient(img):
+def gradient(img, kernel_size=9):
     if len(img.shape) == 3:
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     if len(img.shape) == 4:
@@ -117,13 +119,18 @@ def gradient(img):
     if img.dtype != 'float32':
         img = img.astype('float32')
 
-    kernel_size = 9
     kernel_x = gaussian_derivative_x(kernel_size)
     kernel_y = gaussian_derivative_y(kernel_size)
     dx = cv2.filter2D(img, -1, kernel_x)
     dy = cv2.filter2D(img, -1, kernel_y)
 
     return dy, dx
+
+
+def gradient_magnitude(img):
+    dy, dx = gradient(img)
+
+    return np.sqrt(dy * dy + dx * dx)
 
 
 def hessian_determinant(gray):
@@ -211,3 +218,11 @@ def preview_gaussian_derivative_phi():
             break
 
         angle += 1
+
+
+def distance(x0, y0, x1, y1):
+    return np.sqrt((x1-x0)**2 + (y1-y0)**2)
+
+
+def curvature(x0, y0, x1, y1, x2, y2):
+    return np.sqrt((x0-2*x1+x2)**2 + (y0-2*y1+y2)**2)

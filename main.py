@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 from scipy.optimize import minimize
 
+from app.utils import gradient_magnitude, distance, curvature
 
-image = cv2.imread("data/line.png")
+image = cv2.imread("data/dark_circle.png")
 
 if len(image.shape) == 3:
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -14,27 +15,86 @@ else:
 
 height, width = gray.shape
 
-start_point = np.array([200, 150, 200, 250])
 
+# start points
+start_points = [
+    (250, 150),
+    (250, 200),
+    (250, 250),
+    (250, 300),
+    (250, 350),
+]
+
+start_points_length = len(start_points)
+
+flatten_start_points = []
+for x, y in start_points:
+    flatten_start_points.append(x)
+    flatten_start_points.append(y)
+
+start_point = np.array(flatten_start_points)
+
+# gradient magnitude
+mag = 255 - gradient_magnitude(gray)*100
+
+color_mag = cv2.cvtColor(mag, cv2.COLOR_GRAY2RGB)
 
 def obj_func(p):
-    value0 = 255 - gray[int(p[1]), int(p[0])]
-    value1 = 255 - gray[int(p[3]), int(p[2])]
-    dist = np.sqrt( (p[3] - p[1])**2 + (p[0] - p[2])**2 )
-    return value0 + value1 + (100 - dist)*0.01
+    print(p)
 
+    # continuity
+    sum_distance = 0
+
+    for i in range(0, len(p)-2, 2):
+        sum_distance += distance(p[i], p[i+1], p[i+2], p[i+3])
+
+    mean_distance = 2 * sum_distance / len(p)
+
+    continuity_acc = (mean_distance - sum_distance)**2
+
+    # curvature
+    curvature_acc = 0
+
+    for i in range(2, len(p)-2, 2):
+        curvature_acc += curvature(p[i-2], p[i-1], p[i], p[i+1], p[i+2], p[i+3])
+
+    # magintude
+    mag_acc = 0
+
+    for i in range(0, len(p), 2):
+        x0 = int(p[i])
+        y0 = int(p[i+1])
+
+        value = mag[y0, x0]
+
+        print(value)
+
+        mag_acc += value
+
+    print(mag_acc)
+
+    # return value0 + value1 + value2 + abs(10 - dist0)*0.1 + abs(10 - dist1)*0.1
+    return mag_acc # continuity_acc + curvature_acc + mag_acc
 
 res = minimize(obj_func, start_point, options={'eps': 10})
+print(res.x)
 
-x0 = int(res.x[0])
-y0 = int(res.x[1])
-x1 = int(res.x[2])
-y1 = int(res.x[3])
+print(start_points)
 
-image = cv2.circle(image, (x0, y0), 5, (255, 0, 0), 5)
-image = cv2.circle(image, (x1, y1), 5, (255, 255, 0), 5)
+# print results
+# for x, y in start_points:
+#     color_mag = cv2.circle(color_mag, (x, y), 5, (255, 255, 0), 5)
 
-cv2.imshow('frame', image)
+color_mag = color_mag.clone()
+
+for i in range(0, len(res.x), 2):
+    x = int(res.x[i])
+    y = int(res.x[i+1])
+    color_mag = cv2.circle(color_mag, (x, y), 5, (255, 0, 0), 5)
+
+# display results
+cv2.imshow('frame', color_mag)
 cv2.waitKey(10000)
 
+# clean results
 cv2.destroyAllWindows()

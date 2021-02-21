@@ -35,12 +35,24 @@ for x, y in start_points:
 start_point = np.array(flatten_start_points)
 
 # gradient magnitude
-mag = 255 - gradient_magnitude(gray)*100
+mag = 255 - gradient_magnitude(gray, kernel_size=32)*100
 
 color_mag = cv2.cvtColor(mag, cv2.COLOR_GRAY2RGB)
 
 def obj_func(p):
-    print(p)
+    # draw
+    global color_mag
+
+    temp = color_mag.copy()
+
+    for i in range(0, len(p), 2):
+        x = int(p[i])
+        y = int(p[i + 1])
+        temp = cv2.circle(temp, (x, y), 5, (255, 0, 0), 5)
+
+    # display results
+    cv2.imshow('frame', temp)
+    cv2.waitKey(10)
 
     # continuity
     sum_distance = 0
@@ -76,7 +88,7 @@ def obj_func(p):
     # return value0 + value1 + value2 + abs(10 - dist0)*0.1 + abs(10 - dist1)*0.1
     return mag_acc # continuity_acc + curvature_acc + mag_acc
 
-res = minimize(obj_func, start_point, options={'eps': 10})
+res = minimize(obj_func, start_point, options={'eps': 3})
 print(res.x)
 
 print(start_points)
@@ -85,7 +97,7 @@ print(start_points)
 # for x, y in start_points:
 #     color_mag = cv2.circle(color_mag, (x, y), 5, (255, 255, 0), 5)
 
-color_mag = color_mag.clone()
+color_mag = color_mag.copy()
 
 for i in range(0, len(res.x), 2):
     x = int(res.x[i])

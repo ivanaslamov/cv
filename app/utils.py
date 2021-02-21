@@ -127,8 +127,8 @@ def gradient(img, kernel_size=9):
     return dy, dx
 
 
-def gradient_magnitude(img):
-    dy, dx = gradient(img)
+def gradient_magnitude(img, kernel_size=9):
+    dy, dx = gradient(img, kernel_size=kernel_size)
 
     return np.sqrt(dy * dy + dx * dx)
 
@@ -221,8 +221,8 @@ def preview_gaussian_derivative_phi():
 
 
 def distance(x0, y0, x1, y1):
-    return np.sqrt((x1-x0)**2 + (y1-y0)**2)
+    return np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
 
 
 def curvature(x0, y0, x1, y1, x2, y2):
-    return np.sqrt((x0-2*x1+x2)**2 + (y0-2*y1+y2)**2)
+    return np.sqrt((x0 - 2 * x1 + x2) ** 2 + (y0 - 2 * y1 + y2) ** 2)

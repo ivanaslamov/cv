@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from scipy.optimize import minimize
+from scipy import ndimage
 
 from app.utils import gradient_magnitude, distance, curvature
 
@@ -118,28 +119,65 @@ from skimage.color import rgb2gray
 from skimage import data
 from skimage.filters import gaussian
 from skimage.segmentation import active_contour
+from skimage import feature
 
-
+# read image
 img = cv2.imread("data/bird.jpg")
 
-if len(img.shape) == 3:
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-elif len(img.shape) == 4:
-    img = cv2.cvtColor(img, cv2.COLOR_RGBA2GRAY)
+# pick initial points
+height, width, channels = img.shape
 
-s = np.linspace(0, 2*np.pi, 400)
-r = 200 + 180*np.sin(s)
-c = 320 + 270*np.cos(s)
-init = np.array([r, c]).T
+points = []
 
-snake = active_contour(gaussian(img, 3),
-                       init, alpha=0.015, beta=10, gamma=0.001)
 
-fig, ax = plt.subplots(figsize=(7, 7))
-ax.imshow(img, cmap=plt.cm.gray)
-ax.plot(init[:, 1], init[:, 0], '--r', lw=3)
-ax.plot(snake[:, 1], snake[:, 0], '-b', lw=3)
-ax.set_xticks([]), ax.set_yticks([])
-ax.axis([0, img.shape[1], img.shape[0], 0])
+def click_and_crop(event, x, y, _flags, _param):
+    if event == 1:
+        points.append((x, y))
 
-plt.show()
+
+cv2.namedWindow("img")
+cv2.setMouseCallback("img", click_and_crop)
+
+while (True):
+    frame = img.copy()
+
+    for point in points:
+        frame = cv2.ellipse(frame, point, (2, 2), 5, 0, 360, 255, 1)
+
+    cv2.imshow('img', frame)
+    if cv2.waitKey(10) & 0xFF == ord('q'):
+        break
+
+
+edges = cv2.Canny(img, 100, 200)
+
+edge_dist = ndimage.distance_transform_edt(~edges)
+
+
+
+# s = np.linspace(0, 2*np.pi, 400)
+# r = 200 + 180*np.sin(s)
+# c = 320 + 270*np.cos(s)
+# init = np.array([r, c]).T
+#
+# snake = active_contour(gaussian(img, 3),
+#                        init, alpha=0.015, beta=10, gamma=0.001)
+#
+# fig, ax = plt.subplots(figsize=(7, 7))
+# ax.imshow(img, cmap=plt.cm.gray)
+# ax.plot(init[:, 1], init[:, 0], '--r', lw=3)
+# ax.plot(snake[:, 1], snake[:, 0], '-b', lw=3)
+# ax.set_xticks([]), ax.set_yticks([])
+# ax.axis([0, img.shape[1], img.shape[0], 0])
+#
+# plt.show()
+
+cv2.imshow('img', edge_dist)
+cv2.waitKey(10000)
+
+# clean results
+cv2.destroyAllWindows()
+
+# fig, ax = plt.subplots(figsize=(1, 1))
+# ax.imshow(edge_dist, cmap=plt.cm.gray)
+# plt.show()

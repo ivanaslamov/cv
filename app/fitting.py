@@ -1,51 +1,54 @@
+# the following code is taken from https://github.com/brikeats/Snakes-in-a-Plane
+
 import cv2
 import numpy as np
 from scipy.optimize import minimize
 
 
-def ellipse(image, x0 = 0, y0 = 0, r = 100):
-    if len(image.shape) == 3:
-        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    elif len(image.shape) == 4:
-        gray = cv2.cvtColor(image, cv2.COLOR_RGBA2GRAY)
+def snake_energy(flattened_pts, edge_dist, alpha, beta):
+    pts = np.reshape(flattened_pts, (int(len(flattened_pts)/2), 2))
+
+    # external energy (favors low values of distance image)
+    dist_vals = ndimage.interpolation.map_coordinates(edge_dist, [pts[:,0], pts[:,1]], order=1)
+    edge_energy = np.sum(dist_vals)
+    external_energy = edge_energy
+
+    # spacing energy (favors equi-distant points)
+    prev_pts = np.roll(pts, 1, axis=0)
+    next_pts = np.roll(pts, -1, axis=0)
+    displacements = pts - prev_pts
+    point_distances = np.sqrt(displacements[:,0]**2 + displacements[:,1]**2)
+    mean_dist = np.mean(point_distances)
+    spacing_energy = np.sum((point_distances - mean_dist)**2)
+
+    # curvature energy (favors smooth curves)
+    curvature_1d = prev_pts - 2*pts + next_pts
+    curvature = (curvature_1d[:,0]**2 + curvature_1d[:,1]**2)
+    curvature_energy = np.sum(curvature)
+
+    return external_energy + alpha*spacing_energy + beta*curvature_energy
+
+
+def snake(pts, edge_dist, alpha=0.5, beta=0.25, nits=100, point_plot=None):
+    if point_plot:
+        def callback_function(new_pts):
+            callback_function.nits += 1
+            y = new_pts[0::2]
+            x = new_pts[1::2]
+            point_plot.set_data(x,y)
+            plt.title('%i iterations' % callback_function.nits)
+            point_plot.figure.canvas.draw()
+            plt.pause(0.02)
+        callback_function.nits = 0
     else:
-        gray = image.clone()
+        callback_function = None
 
-    height, width = gray.shape
+    # optimize
+    cost_function = partial(snake_energy, alpha=alpha, beta=beta, edge_dist=edge_dist)
+    options = {'disp':False}
+    options['maxiter'] = nits  # FIXME: check convergence
+    method = 'BFGS'  # 'BFGS', 'CG', or 'Powell'. 'Nelder-Mead' has very slow convergence
+    res = optimize.minimize(cost_function, pts.ravel(), method=method, options=options, callback=callback_function)
+    optimal_pts = np.reshape(res.x, (int(len(res.x)/2), 2))
 
-    points = []
-
-    for y in range(0, height - 1):
-        for x in range(0, width - 1):
-            if gray[y, x] > 100:
-                points.append((x, y))
-
-    a = 1
-    b = 0
-    c = 1
-    d = - 2*x0
-    e = - 2*y0
-    f = y0**2 + x0**2 - r**2
-
-    start_point = np.array([a, b, c, d, e, f])
-
-    def equation(p, x, y):
-        return p[0] * x**2 + p[1] * x * y + p[2] * y**2 + p[3] * x + p[4] * y + p[5]
-
-    def obj_func(p):
-        acc = 0
-
-        for x, y in points:
-            acc += (equation(p, x, y))**2
-
-        return acc
-
-    res = minimize(obj_func, start_point)
-
-    kernel = np.zeros((height, width), np.float32)
-
-    for y in range(0, height):
-        for x in range(0, width):
-            kernel[(y, x)] += equation(res.x, x, y)
-
-    return kernel
+    return optimal_pts

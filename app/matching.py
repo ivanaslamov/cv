@@ -24,9 +24,14 @@ def match(imgLeft, imgRight, preview=False):
 
     # Apply ratio test
     good = []
+    pts1 = []
+    pts2 = []
+
     for m, n in matches:
         if m.distance < 0.75 * n.distance:
             good.append([m])
+            pts2.append(kp2[m.trainIdx].pt)
+            pts1.append(kp1[m.queryIdx].pt)
 
     if preview:
         # cv2.drawMatchesKnn expects list of lists as matches.
@@ -34,4 +39,4 @@ def match(imgLeft, imgRight, preview=False):
 
         plt.imshow(img3), plt.show()
 
-    return (kp1, kp2, good)
+    return (kp1, kp2, good, pts1, pts2)
